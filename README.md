@@ -15,5 +15,5 @@ Pyhton modules: os, re, urllib, requests, subprocess, sys have been implemented 
 Complete design overhaul. Now with support for Windows Systems as well as 8x(1 per available CPU thread) parallel downloading for much faster update process.
 NOTE: Downloads are done in one go. User is not asked for any input. User input to install app is required only when launching adb installer.
 
-All the repo files should be in a single directory in Windows Systems as abb.exe needs to be executed from there.
+All the repo files should be in a single directory in Windows Systems as adb.exe needs to be executed from there.
 ---------------
