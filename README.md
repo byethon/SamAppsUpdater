@@ -11,7 +11,7 @@ Requires USB debugging on devices to be enabled and ADB to be install and access
 
 Pyhton modules: os, re, urllib, requests, subprocess, sys have been implemented in the code.
 
-----Beta.py----
+# Beta.py
 Complete design overhaul. Now with support for Windows Systems as well as 8x(1 per available CPU thread) parallel downloading for much faster update process.
 NOTE: Downloads are done in one go. User is not asked for any input. User input to install app is required only when launching adb installer.
 
