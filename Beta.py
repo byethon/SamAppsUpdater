@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import time
 import os
 import re
 from urllib import request
@@ -129,8 +130,8 @@ def update(app):
 			print(f'\n\033[A{bcolors.OKPURPLE}⣿{bcolors.ENDC}')
 			print(f'\033[A{bcolors.FAIL}  Looking for updatable packages... ERROR: {bcolors.INFOYELLOW}"{error_msg[0]}"{bcolors.ENDC}')
 			print('\033[A ')
-			return
-		return
+			return 0
+		return 0
 	match = match[0]
 	print(f'\n\033[A{bcolors.OKPURPLE}⣿{bcolors.ENDC}')
 	print(f"\033[A  {bcolors.OKPURPLE}Found %s{bcolors.ENDC}"%(app[0]))
@@ -146,12 +147,13 @@ def update(app):
 	elif(match['vs_code']==app[1]):
 		print(f'\033[A{bcolors.OKPURPLE}⣿{bcolors.ENDC}')
 		print(f"  {bcolors.OKGREEN}Already the latest version\n\n{bcolors.ENDC}")
+		return 0
 	else:
 		print(f'\033[A{bcolors.OKPURPLE}⣿{bcolors.ENDC}')
 		print(f"  {bcolors.INFOYELLOW}Installed version higher than that on server?!!\n{bcolors.ENDC}")
 		print(f"  Version code{bcolors.OKPURPLE}(Server)    : %s{bcolors.ENDC}"%(match['vs_code']))
 		print(f"  Version code{bcolors.OKBLUE}(Installed) : %s\n{bcolors.ENDC}\n"%(app[1]))
-	return 1
+		return 0
 
 def loader(itr_shift,max_itr,itr_freq,applist,queue):
 	list=[]
@@ -159,7 +161,7 @@ def loader(itr_shift,max_itr,itr_freq,applist,queue):
 	while itr<max_itr:
 		loadanimate(itr)
 		ret=update(applist[itr])
-		if ret !=None:
+		if ret !=0:
 			list.append(applist[itr])
 		itr+=itr_freq
 	queue.put(list)
@@ -177,8 +179,10 @@ def chainloader(freq,max,applist):
 	return clist
 
 def insproc(file):
-	insproc=subprocess.Popen(["adb","install","-r",file],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
-	return insproc.stdout.readlines()
+	print("\033[A Waiting for Install")
+	insproc=subprocess.Popen(["adb","install","-r",file])
+	out,err=insproc.communicate()
+	return f"{out},{err}"
 
 if __name__ == '__main__':
 	print("                                                         ")
@@ -187,18 +191,22 @@ if __name__ == '__main__':
 	print("Android SDK Version: %s\n"%(sdk_ver))
 	(mode,qmode)=modeprint()
 	if (mode=='1' and os.path.exists(f".list-{model}-{sdk_ver}-Mode-{int(qmode)+1}") and os.stat(f".list-{model}-{sdk_ver}-Mode-{int(qmode)+1}").st_size != 0):
-		print("Reading File...")
+		print("  Reading File...")
 		listfile= open(f".list-{model}-{sdk_ver}-Mode-{int(qmode)+1}","r")
+		mode=(f"{int(qmode)+1}")
 	else:
-		listfile= open(f".list-{model}-{sdk_ver}-Mode-{int(mode)}","w")
+		listfile= open(f".list-{model}-{sdk_ver}-Mode-{int(qmode)+1}","w")
 		if(mode=='1'):
 			print(f"List not populated, Fallback to Mode-{int(qmode)+1}")
 			mode=(f"{int(qmode)+1}")
 	applist=genapplist(mode,qmode,listfile)
 	downlist=chainloader(8,len(applist),applist)
 	print(downlist)
-	for data in downlist:
-		listfile.write(f"{data[0]}, {data[1]}\n")
+	try:
+		for data in downlist:
+			listfile.write(f"{data[0]}, {data[1]}\n")
+	except:
+		print("Skipping list file update in Quick mode")
 	for data in downlist:
 		print(f"\n{bcolors.OKBLUE}Install started for {data[0]}{bcolors.ENDC}")
 		continue_msg = input(f"{bcolors.OKBLUE}Do you want to install this version? {bcolors.INFOYELLOW}[Y/n]: ")
@@ -209,16 +217,12 @@ if __name__ == '__main__':
 			if continue_msg in ("N", "n"):
 				print(f"{bcolors.OKBLUE}\033[AOkay, You may try again any time :)\n\n{bcolors.ENDC}")
 			if continue_msg in ("Y", "y", ""):
-				insout = insproc(data[0])
-				while(len(insout)>1 and insout[1]!=b'Success\n'):
-					insproc(data[0])
-					print(f"{bcolors.FAIL}ERROR : Device not connected or authorization not granted{bcolors.ENDC}")
-					print(f"{bcolors.INFOYELLOW}INFO  : Connect the device and grant authorization for USB debugging{bcolors.ENDC}\033[A\033[A")
+				insout = insproc(data[0]+".apk")
 				print("                                                         ")
 				print("                                                                    \033[A\033[A")
-				print(f"{bcolors.OKPURPLE}{insout[0].decode('utf-8')}{bcolors.ENDC}{bcolors.OKGREEN}{insout[1].decode('utf-8')}{bcolors.ENDC}")
+				print(insout)
 				print(f"{bcolors.OKPURPLE}Running Post-install Cleanup{bcolors.ENDC}")
-				os.remove(data[0])
+				os.remove(data[0]+".apk")
 				print(f"{bcolors.INFOYELLOW}APK Deleted!{bcolors.ENDC}")
 				print(f"{bcolors.OKGREEN}DONE!{bcolors.ENDC}\n\n")
 
