@@ -191,7 +191,7 @@ if __name__ == '__main__':
 		listfile= open(f".list-{model}-{sdk_ver}-Mode-{int(qmode)+1}","r")
 	else:
 		listfile= open(f".list-{model}-{sdk_ver}-Mode-{int(mode)}","w")
-		if(mode==1):
+		if(mode=='1'):
 			print(f"List not populated, Fallback to Mode-{int(qmode)+1}")
 			mode=(f"{int(qmode)+1}")
 	applist=genapplist(mode,qmode,listfile)
